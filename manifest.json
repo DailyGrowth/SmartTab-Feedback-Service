@@ -5,6 +5,7 @@
   "description": "Intelligent Tab Management and Organization",
   "permissions": [
     "tabs",
+    "tabGroups",
     "storage",
     "activeTab",
     "webNavigation",

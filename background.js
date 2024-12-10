@@ -1,13 +1,43 @@
 // Simplified background script for Manifest V3 service worker compatibility
 
-// Ensure top-level await and no immediate execution
 (async () => {
-    console.log('SmartTab Background Script Initialized');
+    console.log('SMARTTAB: Background Script Initializing');
 
-    // Categorization class with expanded categories
+    // Comprehensive runtime check
+    function checkChromeRuntime() {
+        const requiredAPIs = [
+            'chrome.tabs',
+            'chrome.tabs.query',
+            'chrome.tabGroups',
+            'chrome.runtime.onMessage'
+        ];
+
+        const missingAPIs = requiredAPIs.filter(api => {
+            try {
+                const parts = api.split('.');
+                return parts.reduce((obj, part) => obj && obj[part], window) === undefined;
+            } catch (error) {
+                return true;
+            }
+        });
+
+        if (missingAPIs.length > 0) {
+            console.error('SMARTTAB: Missing APIs:', missingAPIs);
+            return false;
+        }
+
+        return true;
+    }
+
+    // Validate Chrome runtime
+    if (!checkChromeRuntime()) {
+        console.error('SMARTTAB: Chrome runtime validation failed');
+        return;
+    }
+
+    // Tab Categorization Logic
     class TabCategorizer {
         constructor() {
-            console.log('TabCategorizer Initialized');
             this.categories = [
                 // Professional & Work Categories
                 'Software Development', 'Web Development', 'Mobile Development', 
@@ -75,80 +105,32 @@
         }
 
         categorize(url, title) {
-            console.log(`Categorizing: URL=${url}, Title=${title}`);
-            const lowercaseUrl = url.toLowerCase();
-            const lowercaseTitle = title.toLowerCase();
+            // Implement categorization logic
+            const urlLower = url.toLowerCase();
+            const titleLower = title.toLowerCase();
 
-            // Comprehensive categorization logic with weighted scoring
-            const categorizations = [
-                // Professional Development
-                { category: 'Software Development', keywords: ['github', 'stackoverflow', 'gitlab', 'bitbucket', 'coding', 'programming', 'developer', 'code', 'repository'] },
-                { category: 'Web Development', keywords: ['html', 'css', 'javascript', 'react', 'angular', 'vue', 'frontend', 'backend', 'webdev'] },
-                { category: 'Data Science', keywords: ['python', 'jupyter', 'kaggle', 'machine learning', 'data analysis', 'statistics', 'data science', 'ai'] },
-                
-                // Professional Networking
-                { category: 'LinkedIn', keywords: ['linkedin', 'professional network', 'job search', 'career'] },
-                { category: 'Professional Forums', keywords: ['stack exchange', 'quora professional', 'expert forum', 'discussion board'] },
-                
-                // Learning
-                { category: 'Online Courses', keywords: ['coursera', 'udemy', 'edx', 'learning', 'online course', 'tutorial', 'lesson', 'training'] },
-                { category: 'Academic Research', keywords: ['scholar', 'research paper', 'academic journal', 'university', 'science', 'publication'] },
-                
-                // Communication
-                { category: 'Video Conferencing', keywords: ['zoom', 'meet.google', 'teams', 'webex', 'conference call', 'remote meeting'] },
-                { category: 'Team Collaboration', keywords: ['slack', 'notion', 'asana', 'trello', 'project management', 'teamwork'] },
-                
-                // Finance
-                { category: 'Stock Trading', keywords: ['investing', 'stocks', 'finance', 'market', 'trading platform', 'investment'] },
-                { category: 'Cryptocurrency', keywords: ['bitcoin', 'ethereum', 'crypto', 'blockchain', 'coinbase', 'digital currency'] },
-                
-                // Entertainment
-                { category: 'Video Streaming', keywords: ['youtube', 'netflix', 'vimeo', 'video streaming', 'movie', 'film', 'cinema'] },
-                { category: 'Music Streaming', keywords: ['spotify', 'apple music', 'soundcloud', 'music platform', 'playlist'] },
-                
-                // Social Media
-                { category: 'Social Media', keywords: ['facebook', 'twitter', 'instagram', 'social network', 'social platform', 'tiktok'] },
-                
-                // News & Information
-                { category: 'Tech News', keywords: ['techcrunch', 'wired', 'verge', 'technology news', 'tech blog', 'gadget'] },
-                { category: 'Global News', keywords: ['cnn', 'bbc', 'reuters', 'news website', 'current affairs', 'world news'] }
-            ];
-
-            // Multi-pass categorization with weighted scoring
-            let bestCategory = 'Uncategorized Resources';
-            let bestScore = 0;
-
-            for (const cat of categorizations) {
-                const matchScore = cat.keywords.reduce((score, keyword) => {
-                    const urlMatch = lowercaseUrl.includes(keyword) ? 2 : 0;
-                    const titleMatch = lowercaseTitle.includes(keyword) ? 1 : 0;
-                    return score + urlMatch + titleMatch;
-                }, 0);
-
-                if (matchScore > bestScore) {
-                    bestScore = matchScore;
-                    bestCategory = cat.category;
-                }
-            }
-
-            // Fallback categories based on domain
-            const domainCategories = [
-                { domain: 'github.com', category: 'Software Development' },
-                { domain: 'stackoverflow.com', category: 'Software Development' },
-                { domain: 'coursera.org', category: 'Online Courses' },
-                { domain: 'udemy.com', category: 'Online Courses' },
-                { domain: 'linkedin.com', category: 'Professional Networking' },
-                { domain: 'youtube.com', category: 'Video Streaming' },
-                { domain: 'netflix.com', category: 'Video Streaming' }
-            ];
-
-            const matchedDomainCategory = domainCategories.find(dc => 
-                lowercaseUrl.includes(dc.domain)
-            );
-
-            return matchedDomainCategory 
-                ? matchedDomainCategory.category 
-                : bestCategory;
+            // Professional Development
+            if (urlLower.includes('github.com') || urlLower.includes('stackoverflow.com')) 
+                return 'Software Development';
+            
+            // Design
+            if (urlLower.includes('dribbble.com') || urlLower.includes('behance.net')) 
+                return 'UI/UX Design';
+            
+            // Learning
+            if (urlLower.includes('coursera.org') || urlLower.includes('udemy.com')) 
+                return 'Online Courses';
+            
+            // News
+            if (urlLower.includes('techcrunch.com') || urlLower.includes('wired.com')) 
+                return 'Tech News';
+            
+            // Social Media
+            if (urlLower.includes('linkedin.com') || urlLower.includes('twitter.com')) 
+                return 'Professional Networking';
+            
+            // Default
+            return 'Uncategorized Resources';
         }
 
         getAllCategories() {
@@ -156,7 +138,7 @@
         }
     }
 
-    // Color generator
+    // Color Generation Logic
     class ColorGenerator {
         constructor() {
             this.colorPalette = [
@@ -166,71 +148,64 @@
         }
 
         getCategoryColor(category) {
+            // Generate a consistent color based on category
+            const hash = this.hashCode(category);
+            return this.colorPalette[Math.abs(hash) % this.colorPalette.length];
+        }
+
+        hashCode(str) {
             let hash = 0;
-            for (let i = 0; i < category.length; i++) {
-                hash = ((hash << 5) - hash) + category.charCodeAt(i);
-                hash = hash & hash;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
             }
-            
-            const colorIndex = Math.abs(hash) % this.colorPalette.length;
-            return this.colorPalette[colorIndex];
+            return hash;
         }
     }
 
-    // Action History Management with Persistent Storage
+    // Action History Management
     const ActionHistory = {
         history: [],
         currentIndex: -1,
-        originalTabStates: [],
 
         recordAction(action, originalTabs) {
-            console.log('Recording Action:', action);
-            if (this.currentIndex < this.history.length - 1) {
-                this.history = this.history.slice(0, this.currentIndex + 1);
-            }
-            
-            this.history.push(action);
-            this.originalTabStates.push(originalTabs);
-            this.currentIndex++;
-
-            if (this.history.length > 50) {
-                this.history.shift();
-                this.originalTabStates.shift();
-                this.currentIndex--;
-            }
-
-            // Persist to storage
-            chrome.storage.local.set({
-                actionHistory: this.history,
-                originalTabStates: this.originalTabStates,
-                currentIndex: this.currentIndex
+            this.history.push({
+                type: action.type,
+                tabs: action.tabs,
+                timestamp: Date.now(),
+                originalTabs: originalTabs
             });
+            this.currentIndex++;
         },
 
-        async restoreOriginalState() {
-            console.log('Attempting to restore original state');
+        restoreOriginalState() {
             if (this.currentIndex >= 0) {
-                const originalTabs = this.originalTabStates[this.currentIndex];
+                const lastAction = this.history[this.currentIndex];
                 
-                // Restore tab positions and groups
-                for (const tab of originalTabs) {
-                    await chrome.tabs.update(tab.id, { 
-                        active: false,
-                        pinned: tab.pinned,
-                        index: tab.index
+                // Restore tabs to their original state
+                lastAction.originalTabs.forEach(tab => {
+                    chrome.tabs.move(tab.id, { 
+                        index: tab.index, 
+                        windowId: chrome.windows.WINDOW_ID_CURRENT 
                     });
-                    
-                    if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
-                        await chrome.tabs.group({
+
+                    // Restore group if applicable
+                    if (tab.groupId !== -1) {
+                        chrome.tabs.group({
                             tabIds: [tab.id],
                             groupId: tab.groupId
                         });
                     }
-                }
+                });
 
-                // Move back in history
+                // Remove the last action
+                this.history.pop();
                 this.currentIndex--;
+
+                return true;
             }
+            return false;
         }
     };
 
@@ -238,139 +213,131 @@
     const tabCategorizer = new TabCategorizer();
     const colorGenerator = new ColorGenerator();
 
-    // Restore action history from storage on startup
-    chrome.storage.local.get(['actionHistory', 'originalTabStates', 'currentIndex'], (result) => {
-        if (result.actionHistory) {
-            ActionHistory.history = result.actionHistory;
-            ActionHistory.originalTabStates = result.originalTabStates;
-            ActionHistory.currentIndex = result.currentIndex;
-        }
-    });
-
-    // Message listener with enhanced error handling
+    // Enhanced message listener
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        console.log('Received Message:', request.action);
+        console.log('SMARTTAB: Received message:', request.action);
+
+        // Ensure async response is possible
+        const asyncSendResponse = (response) => {
+            try {
+                sendResponse(response);
+            } catch (error) {
+                console.error('SMARTTAB: Error sending response:', error);
+            }
+        };
 
         try {
             switch(request.action) {
+                case 'ping':
+                    console.log('SMARTTAB: Received ping from popup');
+                    asyncSendResponse({
+                        success: true,
+                        message: 'Pong',
+                        timestamp: Date.now()
+                    });
+                    return true;
+
                 case 'organizeTabs':
                     chrome.tabs.query({ currentWindow: true }, (tabs) => {
-                        console.log(`Organizing ${tabs.length} tabs`);
+                        console.log(`SMARTTAB: Organizing ${tabs.length} tabs`);
                         
-                        const originalTabs = tabs.map(tab => ({
-                            id: tab.id,
-                            index: tab.index,
-                            pinned: tab.pinned,
-                            groupId: tab.groupId
-                        }));
-
-                        const categorizedTabs = {};
-                        
-                        tabs.forEach(tab => {
-                            const category = tabCategorizer.categorize(tab.url, tab.title);
+                        try {
+                            const categorizedTabs = {};
                             
-                            if (!categorizedTabs[category]) {
-                                categorizedTabs[category] = [];
-                            }
-                            categorizedTabs[category].push(tab.id);
-                        });
+                            tabs.forEach(tab => {
+                                const category = tabCategorizer.categorize(tab.url, tab.title);
+                                
+                                if (!categorizedTabs[category]) {
+                                    categorizedTabs[category] = [];
+                                }
+                                categorizedTabs[category].push(tab.id);
+                            });
 
-                        console.log('Categorized Tabs:', categorizedTabs);
+                            console.log('SMARTTAB: Categorized Tabs:', categorizedTabs);
 
-                        Object.entries(categorizedTabs).forEach(([category, tabIds]) => {
-                            if (tabIds.length > 0) {
-                                chrome.tabs.group({
-                                    tabIds: tabIds
-                                }, (groupId) => {
-                                    chrome.tabGroups.update(groupId, {
-                                        title: category,
-                                        color: colorGenerator.getCategoryColor(category)
+                            Object.entries(categorizedTabs).forEach(([category, tabIds]) => {
+                                if (tabIds.length > 0) {
+                                    chrome.tabs.group({
+                                        tabIds: tabIds
+                                    }, (groupId) => {
+                                        chrome.tabGroups.update(groupId, {
+                                            title: category,
+                                            color: colorGenerator.getCategoryColor(category)
+                                        });
                                     });
-                                });
-                            }
-                        });
+                                }
+                            });
 
-                        ActionHistory.recordAction({
-                            type: 'organize',
-                            tabs: tabs.map(tab => ({
-                                id: tab.id,
-                                url: tab.url,
-                                title: tab.title
-                            }))
-                        }, originalTabs);
-
-                        sendResponse({
-                            success: true,
-                            totalTabs: tabs.length,
-                            categorizedTabs: Object.values(categorizedTabs).reduce((sum, group) => sum + group.length, 0),
-                            categories: Object.keys(categorizedTabs)
-                        });
+                            asyncSendResponse({
+                                success: true,
+                                totalTabs: tabs.length,
+                                categorizedTabs: Object.values(categorizedTabs).reduce((sum, group) => sum + group.length, 0),
+                                categories: Object.keys(categorizedTabs)
+                            });
+                        } catch (error) {
+                            console.error('SMARTTAB: Organize tabs error:', error);
+                            asyncSendResponse({
+                                success: false,
+                                message: `Organize failed: ${error.message}`
+                            });
+                        }
                     });
                     return true;
 
                 case 'deorganizeTabs':
-                    chrome.tabs.query({ currentWindow: true }, (tabs) => {
-                        console.log(`Deorganizing ${tabs.length} tabs`);
-                        console.log('Current tabs:', tabs.map(tab => ({
-                            id: tab.id, 
-                            url: tab.url, 
-                            groupId: tab.groupId
-                        })));
+                    chrome.tabs.query({ currentWindow: true }, async (tabs) => {
+                        console.log('SMARTTAB: Deorganizing tabs');
                         
-                        const originalTabs = tabs.map(tab => ({
-                            id: tab.id,
-                            index: tab.index,
-                            pinned: tab.pinned,
-                            groupId: tab.groupId
-                        }));
+                        try {
+                            const groups = await chrome.tabGroups.query({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+                            console.log('SMARTTAB: Current tab groups', groups);
 
-                        let unGroupedCount = 0;
-                        tabs.forEach(tab => {
-                            if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+                            let unGroupedTabs = [];
+                            
+                            for (const group of groups) {
                                 try {
-                                    console.log(`Attempting to ungroup tab: ${tab.id}`);
-                                    chrome.tabs.ungroup(tab.id, () => {
-                                        if (chrome.runtime.lastError) {
-                                            console.error('Error ungrouping tab:', chrome.runtime.lastError);
-                                        } else {
-                                            unGroupedCount++;
-                                        }
-                                    });
+                                    await chrome.tabs.ungroup(group.tabIds);
+                                    unGroupedTabs.push(...group.tabIds);
                                 } catch (error) {
-                                    console.error('Exception while ungrouping:', error);
+                                    console.error(`SMARTTAB: Error ungrouping tabs in group ${group.id}:`, error);
                                 }
                             }
-                        });
 
-                        ActionHistory.recordAction({
-                            type: 'deorganize',
-                            tabs: tabs.map(tab => ({
-                                id: tab.id,
-                                url: tab.url,
-                                title: tab.title
-                            }))
-                        }, originalTabs);
+                            console.log(`SMARTTAB: Ungrouped ${unGroupedTabs.length} tabs`);
 
-                        sendResponse({
-                            success: true,
-                            totalTabs: tabs.length,
-                            unGroupedTabs: unGroupedCount,
-                            message: `Deorganized ${unGroupedCount} tabs`
-                        });
+                            asyncSendResponse({
+                                success: true,
+                                totalTabs: tabs.length,
+                                unGroupedTabs: unGroupedTabs.length,
+                                message: `Successfully deorganized ${unGroupedTabs.length} tabs`
+                            });
+                        } catch (error) {
+                            console.error('SMARTTAB: Deorganize error:', error);
+                            asyncSendResponse({
+                                success: false,
+                                message: `Deorganize failed: ${error.message}`
+                            });
+                        }
                     });
                     return true;
 
                 default:
-                    console.log('Unknown action:', request.action);
-                    sendResponse({ success: false, message: 'Unknown action' });
+                    console.log('SMARTTAB: Unknown message action', request.action);
+                    asyncSendResponse({ 
+                        success: false, 
+                        message: 'Unknown action' 
+                    });
                     return false;
             }
         } catch (error) {
-            console.error('Error in message listener:', error);
-            sendResponse({ success: false, message: error.toString() });
+            console.error('SMARTTAB: Global message handler error:', error);
+            asyncSendResponse({ 
+                success: false, 
+                message: error.toString() 
+            });
             return false;
         }
     });
 
-    console.log('SmartTab Background Script Setup Complete');
+    console.log('SMARTTAB: Background Script Setup Complete');
 })();
