@@ -6,6 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const donationLink = document.getElementById('donation-link');
     const backButton = document.getElementById('backButton');
 
+    console.log('Popup DOM loaded. Checking button references:', {
+        organizeButton: !!organizeButton,
+        undoButton: !!undoButton,
+        helpLink: !!helpLink,
+        donationLink: !!donationLink,
+        backButton: !!backButton
+    });
+
     // Utility function to open Ko-Fi page
     function openKoFiPage(e) {
         e.preventDefault();
@@ -25,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Generic error handler for message sending
     function sendMessageWithErrorHandling(action, callback) {
+        console.log(`Attempting to send ${action} message`);
         try {
             chrome.runtime.sendMessage({ action: action }, (response) => {
                 console.log(`${action} response:`, response);
@@ -43,41 +52,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Organize tabs functionality
-    organizeButton.addEventListener('click', () => {
-        chrome.tabs.query({ currentWindow: true }, (tabs) => {
-            chrome.runtime.sendMessage({ 
-                action: 'organizeTabs',
-                originalTabs: tabs.map(tab => ({
-                    id: tab.id,
-                    index: tab.index,
-                    pinned: tab.pinned,
-                    groupId: tab.groupId
-                }))
-            }, (response) => {
-                console.log('Organize response:', response);
+    if (organizeButton) {
+        organizeButton.addEventListener('click', () => {
+            console.log('Organize button clicked');
+            chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                console.log(`Found ${tabs.length} tabs to organize`);
+                chrome.runtime.sendMessage({ 
+                    action: 'organizeTabs',
+                    originalTabs: tabs.map(tab => ({
+                        id: tab.id,
+                        index: tab.index,
+                        pinned: tab.pinned,
+                        groupId: tab.groupId
+                    }))
+                }, (response) => {
+                    console.log('Organize response:', response);
+                    if (response && response.success) {
+                        updateTabStats();
+                    } else {
+                        console.error('Error in organizeTabs:', response);
+                        alert('Failed to organize tabs. Please check console for details.');
+                    }
+                });
+            });
+        });
+    } else {
+        console.error('Organize button not found in DOM');
+    }
+
+    // Deorganize action
+    if (undoButton) {
+        undoButton.addEventListener('click', () => {
+            console.log('Deorganize (Undo) button clicked');
+            sendMessageWithErrorHandling('deorganizeTabs', (response) => {
+                console.log('Deorganize response:', response);
                 if (response && response.success) {
-                    updateTabStats();
+                    console.log('Deorganize successful');
                 } else {
-                    console.error('Error in organizeTabs:', response);
-                    alert('Failed to organize tabs. Please check console for details.');
+                    console.error('Error in deorganizeTabs:', response);
                 }
             });
         });
-    });
-
-    // Deorganize action
-    undoButton.addEventListener('click', () => {
-        sendMessageWithErrorHandling('deorganizeTabs');
-    });
+    } else {
+        console.error('Deorganize button not found in DOM');
+    }
 
     // Help icon - open help page
-    helpLink.addEventListener('click', () => {
-        chrome.tabs.create({ url: 'help.html' });
-    });
+    if (helpLink) {
+        helpLink.addEventListener('click', () => {
+            chrome.tabs.create({ url: 'help.html' });
+        });
+    }
 
     // Donation link
-    donationLink.addEventListener('click', openKoFiPage);
+    if (donationLink) {
+        donationLink.addEventListener('click', openKoFiPage);
+    }
 
     // Initial tab stats update
     updateTabStats();
+
+    // Log any potential runtime errors
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        console.log('Received runtime message:', request);
+    });
 });
