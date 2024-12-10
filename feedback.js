@@ -9,6 +9,26 @@
     const FEEDBACK_PROMPT_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const INSTALLATION_TIME_KEY = 'smarttab_installation_time';
 
+    // Enhanced Logging Function
+    function log(message, level = 'info') {
+        const timestamp = new Date().toISOString();
+        const logMessage = `[SmartTab Feedback] [${level.toUpperCase()}] ${message}`;
+        
+        // Console logging
+        console[level](logMessage);
+        
+        // Optional: Store logs in chrome storage for debugging
+        chrome.storage.local.get(['feedbackLogs'], (result) => {
+            const logs = result.feedbackLogs || [];
+            logs.push({ timestamp, message: logMessage, level });
+            
+            // Keep only last 100 logs
+            const trimmedLogs = logs.slice(-100);
+            
+            chrome.storage.local.set({ feedbackLogs: trimmedLogs });
+        });
+    }
+
     class FeedbackManager {
         constructor() {
             this.initializeInstallationTime();
@@ -16,10 +36,13 @@
 
         // Track installation time
         initializeInstallationTime() {
-            const installTime = localStorage.getItem(INSTALLATION_TIME_KEY);
-            if (!installTime) {
-                localStorage.setItem(INSTALLATION_TIME_KEY, Date.now());
-            }
+            chrome.storage.local.get([INSTALLATION_TIME_KEY], (result) => {
+                if (!result[INSTALLATION_TIME_KEY]) {
+                    chrome.storage.local.set({
+                        [INSTALLATION_TIME_KEY]: Date.now()
+                    });
+                }
+            });
         }
 
         // Collect anonymous usage statistics
@@ -39,6 +62,8 @@
         // Send usage stats to API
         async sendUsageStats(stats) {
             try {
+                log('Attempting to submit usage stats');
+                
                 const response = await fetch(`${API_ENDPOINT}/usage-stats`, {
                     method: 'POST',
                     headers: {
@@ -53,13 +78,18 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Usage stats submission failed');
+                    const errorText = await response.text();
+                    throw new Error(`Usage stats submission failed: ${errorText}`);
                 }
 
-                return await response.json();
+                const result = await response.json();
+                log('Usage stats submitted successfully', 'info');
+                return result;
             } catch (error) {
-                console.error('Error submitting usage stats:', error);
-                // Optionally, show user-friendly error message
+                log(`Error submitting usage stats: ${error.message}`, 'error');
+                // Optional: Send error to a secondary logging mechanism
+                this.logErrorToStorage(error);
+                throw error;
             }
         }
 
@@ -130,9 +160,9 @@
 
         // Submit feedback to API
         async submitFeedback(feedback) {
-            if (!feedback.trim()) return;
-
             try {
+                log('Attempting to submit user feedback');
+                
                 const response = await fetch(`${API_ENDPOINT}/feedback`, {
                     method: 'POST',
                     headers: {
@@ -147,13 +177,17 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Feedback submission failed');
+                    const errorText = await response.text();
+                    throw new Error(`Feedback submission failed: ${errorText}`);
                 }
 
-                return await response.json();
+                const result = await response.json();
+                log('Feedback submitted successfully', 'info');
+                return result;
             } catch (error) {
-                console.error('Error submitting feedback:', error);
-                // Optionally, show user-friendly error message
+                log(`Error submitting feedback: ${error.message}`, 'error');
+                this.logErrorToStorage(error);
+                throw error;
             }
         }
 
@@ -164,6 +198,22 @@
                 modal.remove();
             }
             localStorage.setItem('feedback_prompted', Date.now());
+        }
+
+        logErrorToStorage(error) {
+            chrome.storage.local.get(['feedbackErrors'], (result) => {
+                const errors = result.feedbackErrors || [];
+                errors.push({
+                    timestamp: new Date().toISOString(),
+                    message: error.message,
+                    stack: error.stack
+                });
+
+                // Keep only last 50 errors
+                const trimmedErrors = errors.slice(-50);
+                
+                chrome.storage.local.set({ feedbackErrors: trimmedErrors });
+            });
         }
 
         // Initialize feedback mechanisms
