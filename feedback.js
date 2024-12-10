@@ -32,6 +32,24 @@
     class FeedbackManager {
         constructor() {
             this.initializeInstallationTime();
+            this.setupDebugTools();
+        }
+
+        // Debug method to force feedback prompt
+        setupDebugTools() {
+            // Expose debug method to window for testing
+            window.SmartTabDebug = {
+                forceFeedbackPrompt: () => {
+                    log('Forcing feedback prompt for testing', 'warn');
+                    this.promptForFeedback();
+                },
+                logStoredData: () => {
+                    chrome.storage.local.get(['feedbackLogs', 'feedbackErrors'], (result) => {
+                        console.log('Stored Feedback Logs:', result.feedbackLogs);
+                        console.log('Stored Feedback Errors:', result.feedbackErrors);
+                    });
+                }
+            };
         }
 
         // Track installation time
@@ -100,62 +118,54 @@
         }
 
         // Create feedback modal
-        createFeedbackModal() {
-            const modal = document.createElement('div');
-            modal.id = 'smarttab-feedback-modal';
-            modal.innerHTML = `
-                <style>
-                    #smarttab-feedback-modal {
-                        position: fixed;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: white;
-                        padding: 20px;
-                        border-radius: 10px;
-                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                        z-index: 1000;
-                        max-width: 400px;
-                        text-align: center;
-                    }
-                    #smarttab-feedback-modal textarea {
-                        width: 100%;
-                        margin: 10px 0;
-                        min-height: 100px;
-                    }
-                    .smarttab-button {
-                        background: #4a90e2;
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 5px;
-                        margin: 5px;
-                        cursor: pointer;
-                    }
-                    .smarttab-button:hover {
-                        background: #357abd;
-                    }
-                </style>
-                <h2>Enjoying SmartTab?</h2>
-                <p>We'd love to hear your thoughts!</p>
-                <textarea placeholder="Share your feedback, suggestions, or experience..."></textarea>
-                <div>
-                    <button class="smarttab-button" id="submit-feedback">Submit Feedback</button>
-                    <button class="smarttab-button" id="close-feedback">Remind Me Later</button>
-                </div>
-            `;
+        async promptForFeedback() {
+            try {
+                log('Attempting to prompt for feedback', 'info');
+                
+                // Create a simple feedback modal
+                const feedbackModal = document.createElement('div');
+                feedbackModal.innerHTML = `
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                                background: white; padding: 20px; border: 2px solid #333; 
+                                z-index: 10000; max-width: 400px;">
+                        <h2>Help Improve SmartTab</h2>
+                        <textarea id="smarttab-feedback" rows="4" 
+                                  style="width: 100%; margin-bottom: 10px;" 
+                                  placeholder="Share your thoughts about SmartTab..."></textarea>
+                        <button id="submit-feedback">Submit Feedback</button>
+                        <button id="cancel-feedback">Cancel</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(feedbackModal);
 
-            document.body.appendChild(modal);
+                const textArea = feedbackModal.querySelector('#smarttab-feedback');
+                const submitButton = feedbackModal.querySelector('#submit-feedback');
+                const cancelButton = feedbackModal.querySelector('#cancel-feedback');
 
-            document.getElementById('submit-feedback').addEventListener('click', () => {
-                const feedback = modal.querySelector('textarea').value;
-                this.submitFeedback(feedback);
-                this.closeFeedbackModal();
-            });
+                submitButton.addEventListener('click', async () => {
+                    const feedback = textArea.value.trim();
+                    if (feedback) {
+                        try {
+                            await this.submitFeedback(feedback);
+                            log('Feedback submitted successfully', 'info');
+                            document.body.removeChild(feedbackModal);
+                        } catch (error) {
+                            log(`Feedback submission error: ${error.message}`, 'error');
+                            alert('Failed to submit feedback. Please try again.');
+                        }
+                    } else {
+                        alert('Please enter some feedback before submitting.');
+                    }
+                });
 
-            document.getElementById('close-feedback').addEventListener('click', () => {
-                this.closeFeedbackModal();
-            });
+                cancelButton.addEventListener('click', () => {
+                    document.body.removeChild(feedbackModal);
+                });
+
+            } catch (error) {
+                log(`Error in feedback prompt: ${error.message}`, 'error');
+            }
         }
 
         // Submit feedback to API
@@ -227,12 +237,12 @@
 
             // Periodically check for feedback prompt
             if (this.shouldPromptFeedback()) {
-                this.createFeedbackModal();
+                this.promptForFeedback();
             }
         }
     }
 
-    // Initialize feedback manager
+    // Initialize the feedback manager when the script loads
     const feedbackManager = new FeedbackManager();
     feedbackManager.initialize();
 })();
