@@ -1,11 +1,13 @@
 // User Feedback Mechanism for SmartTab Organizer
 
 (function() {
+    // SmartTab Feedback Service Configuration
+    const SMARTTAB_API_SECRET = 'SmartTab_17aaf159c427520b689d58301e437efd64aeec53233f63de258dc92cb5d00f88_FeedbackService_20241210';
+    const API_ENDPOINT = 'https://smarttab-feedback-service.onrender.com';
+
     const FEEDBACK_KEY = 'smarttab_feedback_data';
     const FEEDBACK_PROMPT_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const INSTALLATION_TIME_KEY = 'smarttab_installation_time';
-    const API_ENDPOINT = 'https://smarttab-feedback-service.onrender.com';
-    const SMARTTAB_API_SECRET = 'YOUR_API_SECRET_HERE'; // Replace with your actual API secret
 
     class FeedbackManager {
         constructor() {
