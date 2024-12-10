@@ -37,19 +37,26 @@
 
         // Debug method to force feedback prompt
         setupDebugTools() {
-            // Expose debug method to window for testing
-            window.SmartTabDebug = {
-                forceFeedbackPrompt: () => {
-                    log('Forcing feedback prompt for testing', 'warn');
-                    this.promptForFeedback();
-                },
-                logStoredData: () => {
-                    chrome.storage.local.get(['feedbackLogs', 'feedbackErrors'], (result) => {
-                        console.log('Stored Feedback Logs:', result.feedbackLogs);
-                        console.log('Stored Feedback Errors:', result.feedbackErrors);
-                    });
-                }
+            // Create global debug object if it doesn't exist
+            if (!window.SmartTabDebug) {
+                window.SmartTabDebug = {};
+            }
+
+            // Expose debug methods
+            window.SmartTabDebug.forceFeedbackPrompt = () => {
+                log('Forcing feedback prompt for testing', 'warn');
+                this.promptForFeedback();
             };
+
+            window.SmartTabDebug.logStoredData = () => {
+                chrome.storage.local.get(['feedbackLogs', 'feedbackErrors'], (result) => {
+                    console.log('Stored Feedback Logs:', result.feedbackLogs);
+                    console.log('Stored Feedback Errors:', result.feedbackErrors);
+                });
+            };
+
+            // Log that debug tools are ready
+            log('SmartTab Debug Tools Initialized', 'info');
         }
 
         // Track installation time
@@ -127,13 +134,15 @@
                 feedbackModal.innerHTML = `
                     <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
                                 background: white; padding: 20px; border: 2px solid #333; 
-                                z-index: 10000; max-width: 400px;">
+                                z-index: 10000; max-width: 400px; text-align: center;">
                         <h2>Help Improve SmartTab</h2>
                         <textarea id="smarttab-feedback" rows="4" 
                                   style="width: 100%; margin-bottom: 10px;" 
                                   placeholder="Share your thoughts about SmartTab..."></textarea>
-                        <button id="submit-feedback">Submit Feedback</button>
-                        <button id="cancel-feedback">Cancel</button>
+                        <div>
+                            <button id="submit-feedback" style="margin-right: 10px;">Submit Feedback</button>
+                            <button id="cancel-feedback">Cancel</button>
+                        </div>
                     </div>
                 `;
                 
@@ -244,5 +253,7 @@
 
     // Initialize the feedback manager when the script loads
     const feedbackManager = new FeedbackManager();
-    feedbackManager.initialize();
+    
+    // Optional: Automatically log that the script has loaded
+    log('SmartTab Feedback Script Loaded', 'info');
 })();

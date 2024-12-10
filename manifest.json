@@ -1,14 +1,13 @@
 {
   "manifest_version": 3,
   "name": "SmartTab Organizer",
-  "version": "1.5",
-  "description": "Intelligent tab organization and management",
+  "version": "1.5.0",
+  "description": "Intelligent Tab Management and Organization",
   "permissions": [
     "tabs",
-    "tabGroups", 
-    "storage", 
+    "storage",
     "activeTab",
-    "notifications",
+    "webNavigation",
     "contextMenus"
   ],
   "host_permissions": [
@@ -20,15 +19,15 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
   },
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png", 
-    "128": "icon128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "web_accessible_resources": [{
     "resources": [
@@ -38,11 +37,15 @@
     ],
     "matches": ["<all_urls>"]
   }],
-  "content_scripts": [{
-    "matches": ["<all_urls>"],
-    "js": ["feedback.js"],
-    "run_at": "document_idle"
-  }],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["feedback.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ],
   "externally_connectable": {
     "matches": [
       "https://smarttab-feedback-service.onrender.com/*",
