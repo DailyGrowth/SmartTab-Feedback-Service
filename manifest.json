@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "SmartTab Organizer",
+  "version": "1.5",
+  "description": "Intelligent tab organization and management",
+  "permissions": [
+    "tabs",
+    "tabGroups", 
+    "storage", 
+    "activeTab",
+    "notifications",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png", 
+    "128": "icon128.png"
+  },
+  "web_accessible_resources": [{
+    "resources": [
+      "help.html", 
+      "upgrade.html", 
+      "feedback.js"
+    ],
+    "matches": ["<all_urls>"]
+  }],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["feedback.js"],
+    "run_at": "document_idle"
+  }]
+}

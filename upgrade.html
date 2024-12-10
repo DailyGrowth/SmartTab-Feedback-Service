@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartTab Organizer - Upgrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .development-note {
+            background-color: #fffacd;
+            border: 1px solid #ffd700;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .pricing-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .pricing-plan {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            width: 45%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+        .pricing-plan h2 {
+            color: #4285f4;
+            margin-bottom: 15px;
+        }
+        .pricing-plan .price {
+            font-size: 2em;
+            color: #34a853;
+            margin: 15px 0;
+        }
+        .pricing-plan .coming-soon {
+            background-color: #ff6347;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8em;
+        }
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .feature-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border-radius: 5px;
+        }
+        .feature-list li::before {
+            content: "✓";
+            margin-right: 10px;
+            color: #34a853;
+        }
+        .feature-list .unavailable {
+            color: #999;
+            text-decoration: line-through;
+        }
+        .feature-list .unavailable::before {
+            content: "✗";
+            color: #ff6347;
+        }
+        .donate-btn {
+            background-color: #34a853;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        .github-btn {
+            background-color: #4285f4;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 15px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="development-note">
+        <strong>🚧 Development in Progress 🚧</strong>
+        <p>SmartTab Organizer is actively developing Pro features! Current version is free and manually-operated. Subscription models and advanced features are coming soon.</p>
+    </div>
+
+    <h1>SmartTab Organizer - Upgrade Plans</h1>
+
+    <div class="pricing-container">
+        <div class="pricing-plan">
+            <h2>Free Tier</h2>
+            <div class="price">$0 / month</div>
+            <ul class="feature-list">
+                <li>Manual Tab Organization</li>
+                <li>30+ Predefined Categories</li>
+                <li>Undo Organization</li>
+                <li>Basic Tab Grouping</li>
+            </ul>
+        </div>
+
+        <div class="pricing-plan">
+            <span class="coming-soon">Coming Soon</span>
+            <h2>Pro Tier</h2>
+            <div class="price">$2.99 / month</div>
+            <ul class="feature-list">
+                <li>All Free Tier Features</li>
+                <li class="unavailable">Automatic Tab Organization</li>
+                <li class="unavailable">AI-Powered Categorization</li>
+                <li class="unavailable">Machine Learning Tab Insights</li>
+                <li class="unavailable">Personalized Category Training</li>
+                <li class="unavailable">Advanced Tab Analytics</li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+        <h3>Support Our Open-Source Project</h3>
+        <p>SmartTab Organizer is an independent project developed with ❤️ to improve your browsing experience.</p>
+        <p>Your support helps us continue developing innovative tab management solutions.</p>
+        
+        <a href="https://ko-fi.com/smarttaborganizer" target="_blank" class="donate-btn">☕ Donate and Support Us</a>
+    </div>
+</body>
+</html>

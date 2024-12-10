@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmartTab Organizer</title>
+    <style>
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --text-color: #202124;
+            --background-color: #ffffff;
+        }
+
+        body {
+            width: 350px;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: none;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: var(--primary-color);
+        }
+
+        .organize-section {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .organize-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-grow: 1;
+        }
+
+        .organize-button:hover {
+            background-color: #3367d6;
+        }
+
+        .undo-button {
+            background-color: #ff6b6b;
+        }
+
+        .stats-section {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .help-icon {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+        }
+
+        .upgrade-button {
+            pointer-events: none;
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .help-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .help-donation-link {
+            margin-left: 10px;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .donation-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button id="backButton" class="back-button">←</button>
+            <div class="logo">SmartTab</div>
+        </div>
+
+        <div id="mainView">
+            <div class="organize-section">
+                <div class="action-buttons">
+                    <button id="organizeButton" class="organize-button">Organize My Tabs</button>
+                    <button id="undoButton" class="undo-button organize-button">Deorganize</button>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stat">
+                    <div class="stat-value" id="totalTabsCount">0</div>
+                    <div>Total Tabs</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="categorizedTabsCount">0</div>
+                    <div>Categorized</div>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <img src="help-icon.png" alt="Help" class="help-icon" id="helpLink">
+                <a href="https://ko-fi.com/dailygrowthcollective" class="upgrade-button" id="upgradeButton">Upgrade to Pro (Coming Soon)</a>
+                <a href="https://ko-fi.com/dailygrowthcollective" id="donation-link" class="donation-link">☕ Support Our Project</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
