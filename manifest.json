@@ -50,11 +50,7 @@
   },
   "externally_connectable": {
     "matches": [
-      "https://smarttab-feedback-service.onrender.com/*",
-      "http://localhost:8000/*"
+      "https://smarttab-feedback-service.onrender.com/*"
     ]
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://smarttab-feedback-service.onrender.com"
   }
 }

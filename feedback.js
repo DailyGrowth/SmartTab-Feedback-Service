@@ -1,10 +1,7 @@
-// User Feedback Mechanism for SmartTab Organizer
-
-(function() {
-    // Explicitly create global SmartTabDebug object
-    if (typeof window.SmartTabDebug === 'undefined') {
-        window.SmartTabDebug = {};
-    }
+// Explicitly expose debug tools globally
+(function(global) {
+    // Create global debug object if it doesn't exist
+    global.SmartTabDebug = global.SmartTabDebug || {};
 
     console.log('SmartTab Debug: Script initialization started');
 
@@ -61,8 +58,8 @@
             };
 
             // Expose methods to global SmartTabDebug
-            window.SmartTabDebug.forceFeedbackPrompt = forceFeedbackPrompt;
-            window.SmartTabDebug.logStoredData = logStoredData;
+            global.SmartTabDebug.forceFeedbackPrompt = forceFeedbackPrompt;
+            global.SmartTabDebug.logStoredData = logStoredData;
 
             console.log('SmartTab Debug: Debug tools exposed globally');
         }
@@ -265,7 +262,10 @@
     log('SmartTab Feedback Script Loaded', 'info');
 
     // Expose the feedback manager globally for additional debugging
-    window.SmartTabDebug.feedbackManager = feedbackManager;
+    global.SmartTabDebug.feedbackManager = feedbackManager;
 
     console.log('SmartTab Debug: Script initialization complete');
-})();
+
+    // Immediately log global state for debugging
+    console.log('Global SmartTabDebug object:', global.SmartTabDebug);
+})(typeof window !== 'undefined' ? window : global);
