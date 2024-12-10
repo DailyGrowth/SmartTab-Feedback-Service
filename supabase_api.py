@@ -5,7 +5,7 @@ from datetime import datetime
 from functools import wraps
 
 import httpx
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -56,8 +56,29 @@ class UsageStats(BaseModel):
 
 # Authentication Decorator
 def require_api_key(f):
+    @wraps(f)
     async def decorated_function(*args, **kwargs):
-        # Implement your API key validation logic here
+        # Get the Authorization header from the request
+        request = kwargs.get('request')
+        if not request:
+            raise HTTPException(status_code=401, detail="No request object found")
+        
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            raise HTTPException(status_code=401, detail="Authorization header missing")
+        
+        # Extract the token (expecting "Bearer YOUR_TOKEN")
+        try:
+            auth_type, token = auth_header.split()
+            if auth_type.lower() != 'bearer':
+                raise ValueError("Invalid authorization type")
+        except ValueError:
+            raise HTTPException(status_code=401, detail="Invalid Authorization header format")
+        
+        # Validate the token against the stored secret
+        if token != Config.SECRET_KEY:
+            raise HTTPException(status_code=403, detail="Invalid API secret")
+        
         return await f(*args, **kwargs)
     return decorated_function
 
@@ -82,7 +103,7 @@ async def submit_to_supabase(collection: str, data: dict):
 # API Endpoints
 @app.post("/feedback")
 @require_api_key
-async def submit_feedback(feedback: Feedback):
+async def submit_feedback(request: Request, feedback: Feedback):
     try:
         response = await submit_to_supabase('feedback', {
             "extension_id": feedback.extension_id,
@@ -103,7 +124,7 @@ async def submit_feedback(feedback: Feedback):
 
 @app.post("/usage-stats")
 @require_api_key
-async def submit_usage_stats(stats: UsageStats):
+async def submit_usage_stats(request: Request, stats: UsageStats):
     try:
         response = await submit_to_supabase('usage_stats', {
             "extension_id": stats.extension_id,

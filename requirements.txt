@@ -12,5 +12,8 @@ pydantic==1.10.7
 # Async and Concurrency
 asyncio==3.4.3
 
+# Utilities
+functools-extra==1.0.1  # Provides additional function decorators
+
 # Optional: Monitoring and Logging
 sentry-sdk==1.22.0  # Optional error tracking
