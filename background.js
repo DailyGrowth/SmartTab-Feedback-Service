@@ -3,6 +3,21 @@
 (async () => {
     console.log('SMARTTAB: Background Script Initializing');
 
+    // Global error logging
+    self.addEventListener('error', (event) => {
+        console.error('SMARTTAB: Uncaught global error:', event.error);
+    });
+
+    // Logging function with error tracking
+    function safeLog(message, ...args) {
+        try {
+            console.log(`SMARTTAB: ${message}`, ...args);
+        } catch (error) {
+            // Fallback logging
+            console.error('SMARTTAB: Logging failed', error);
+        }
+    }
+
     // Comprehensive runtime check
     function checkChromeRuntime() {
         const requiredAPIs = [
@@ -22,7 +37,7 @@
         });
 
         if (missingAPIs.length > 0) {
-            console.error('SMARTTAB: Missing APIs:', missingAPIs);
+            safeLog('Missing Chrome APIs:', missingAPIs);
             return false;
         }
 
@@ -213,131 +228,168 @@
     const tabCategorizer = new TabCategorizer();
     const colorGenerator = new ColorGenerator();
 
-    // Enhanced message listener
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        console.log('SMARTTAB: Received message:', request.action);
-
-        // Ensure async response is possible
-        const asyncSendResponse = (response) => {
-            try {
-                sendResponse(response);
-            } catch (error) {
-                console.error('SMARTTAB: Error sending response:', error);
-            }
-        };
-
+    // Robust message listener
+    function setupMessageListener() {
         try {
-            switch(request.action) {
-                case 'ping':
-                    console.log('SMARTTAB: Received ping from popup');
-                    asyncSendResponse({
-                        success: true,
-                        message: 'Pong',
-                        timestamp: Date.now()
-                    });
-                    return true;
+            chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                safeLog('Received message:', request.action);
 
-                case 'organizeTabs':
-                    chrome.tabs.query({ currentWindow: true }, (tabs) => {
-                        console.log(`SMARTTAB: Organizing ${tabs.length} tabs`);
-                        
-                        try {
-                            const categorizedTabs = {};
-                            
-                            tabs.forEach(tab => {
-                                const category = tabCategorizer.categorize(tab.url, tab.title);
-                                
-                                if (!categorizedTabs[category]) {
-                                    categorizedTabs[category] = [];
-                                }
-                                categorizedTabs[category].push(tab.id);
+                // Ensure async response is possible
+                const asyncSendResponse = (response) => {
+                    try {
+                        sendResponse(response);
+                    } catch (error) {
+                        safeLog('Error sending response:', error);
+                    }
+                };
+
+                try {
+                    switch(request.action) {
+                        case 'ping':
+                            safeLog('Received ping from popup');
+                            asyncSendResponse({
+                                success: true,
+                                message: 'Pong',
+                                timestamp: Date.now()
                             });
+                            return true;
 
-                            console.log('SMARTTAB: Categorized Tabs:', categorizedTabs);
+                        case 'organizeTabs':
+                            chrome.tabs.query({ currentWindow: true }, (tabs) => {
+                                safeLog(`Organizing ${tabs.length} tabs`);
+                                
+                                try {
+                                    const categorizedTabs = {};
+                                    
+                                    tabs.forEach(tab => {
+                                        const category = tabCategorizer.categorize(tab.url, tab.title);
+                                        
+                                        if (!categorizedTabs[category]) {
+                                            categorizedTabs[category] = [];
+                                        }
+                                        categorizedTabs[category].push(tab.id);
+                                    });
 
-                            Object.entries(categorizedTabs).forEach(([category, tabIds]) => {
-                                if (tabIds.length > 0) {
-                                    chrome.tabs.group({
-                                        tabIds: tabIds
-                                    }, (groupId) => {
-                                        chrome.tabGroups.update(groupId, {
-                                            title: category,
-                                            color: colorGenerator.getCategoryColor(category)
-                                        });
+                                    safeLog('Categorized Tabs:', categorizedTabs);
+
+                                    Object.entries(categorizedTabs).forEach(([category, tabIds]) => {
+                                        if (tabIds.length > 0) {
+                                            chrome.tabs.group({
+                                                tabIds: tabIds
+                                            }, (groupId) => {
+                                                chrome.tabGroups.update(groupId, {
+                                                    title: category,
+                                                    color: colorGenerator.getCategoryColor(category)
+                                                });
+                                            });
+                                        }
+                                    });
+
+                                    asyncSendResponse({
+                                        success: true,
+                                        totalTabs: tabs.length,
+                                        categorizedTabs: Object.values(categorizedTabs).reduce((sum, group) => sum + group.length, 0),
+                                        categories: Object.keys(categorizedTabs)
+                                    });
+                                } catch (error) {
+                                    safeLog('Organize tabs error:', error);
+                                    asyncSendResponse({
+                                        success: false,
+                                        message: `Organize failed: ${error.message}`
                                     });
                                 }
                             });
+                            return true;
 
-                            asyncSendResponse({
-                                success: true,
-                                totalTabs: tabs.length,
-                                categorizedTabs: Object.values(categorizedTabs).reduce((sum, group) => sum + group.length, 0),
-                                categories: Object.keys(categorizedTabs)
-                            });
-                        } catch (error) {
-                            console.error('SMARTTAB: Organize tabs error:', error);
-                            asyncSendResponse({
-                                success: false,
-                                message: `Organize failed: ${error.message}`
-                            });
-                        }
-                    });
-                    return true;
-
-                case 'deorganizeTabs':
-                    chrome.tabs.query({ currentWindow: true }, async (tabs) => {
-                        console.log('SMARTTAB: Deorganizing tabs');
-                        
-                        try {
-                            const groups = await chrome.tabGroups.query({ windowId: chrome.windows.WINDOW_ID_CURRENT });
-                            console.log('SMARTTAB: Current tab groups', groups);
-
-                            let unGroupedTabs = [];
-                            
-                            for (const group of groups) {
+                        case 'deorganizeTabs':
+                            chrome.tabs.query({ currentWindow: true }, async (tabs) => {
+                                safeLog('Deorganizing tabs');
+                                
                                 try {
-                                    await chrome.tabs.ungroup(group.tabIds);
-                                    unGroupedTabs.push(...group.tabIds);
+                                    const groups = await chrome.tabGroups.query({ windowId: chrome.windows.WINDOW_ID_CURRENT });
+                                    safeLog('Current tab groups', groups);
+
+                                    let unGroupedTabs = [];
+                                    
+                                    for (const group of groups) {
+                                        try {
+                                            await chrome.tabs.ungroup(group.tabIds);
+                                            unGroupedTabs.push(...group.tabIds);
+                                        } catch (error) {
+                                            safeLog(`Error ungrouping tabs in group ${group.id}:`, error);
+                                        }
+                                    }
+
+                                    safeLog(`Ungrouped ${unGroupedTabs.length} tabs`);
+
+                                    asyncSendResponse({
+                                        success: true,
+                                        totalTabs: tabs.length,
+                                        unGroupedTabs: unGroupedTabs.length,
+                                        message: `Successfully deorganized ${unGroupedTabs.length} tabs`
+                                    });
                                 } catch (error) {
-                                    console.error(`SMARTTAB: Error ungrouping tabs in group ${group.id}:`, error);
+                                    safeLog('Deorganize error:', error);
+                                    asyncSendResponse({
+                                        success: false,
+                                        message: `Deorganize failed: ${error.message}`
+                                    });
                                 }
-                            }
-
-                            console.log(`SMARTTAB: Ungrouped ${unGroupedTabs.length} tabs`);
-
-                            asyncSendResponse({
-                                success: true,
-                                totalTabs: tabs.length,
-                                unGroupedTabs: unGroupedTabs.length,
-                                message: `Successfully deorganized ${unGroupedTabs.length} tabs`
                             });
-                        } catch (error) {
-                            console.error('SMARTTAB: Deorganize error:', error);
-                            asyncSendResponse({
-                                success: false,
-                                message: `Deorganize failed: ${error.message}`
-                            });
-                        }
-                    });
-                    return true;
+                            return true;
 
-                default:
-                    console.log('SMARTTAB: Unknown message action', request.action);
+                        default:
+                            safeLog('Unknown message action', request.action);
+                            asyncSendResponse({ 
+                                success: false, 
+                                message: 'Unknown action' 
+                            });
+                            return false;
+                    }
+                } catch (error) {
+                    safeLog('Global message handler error:', error);
                     asyncSendResponse({ 
                         success: false, 
-                        message: 'Unknown action' 
+                        message: error.toString() 
                     });
                     return false;
-            }
-        } catch (error) {
-            console.error('SMARTTAB: Global message handler error:', error);
-            asyncSendResponse({ 
-                success: false, 
-                message: error.toString() 
+                }
             });
+
+            safeLog('Message listener setup complete');
+            return true;
+        } catch (error) {
+            safeLog('Failed to setup message listener:', error);
             return false;
         }
-    });
+    }
+
+    // Service Worker Initialization
+    function initializeServiceWorker() {
+        safeLog('Service Worker Initializing');
+
+        // Validate Chrome runtime
+        if (!checkChromeRuntime()) {
+            safeLog('Chrome runtime validation failed');
+            return false;
+        }
+
+        // Setup message listener
+        if (!setupMessageListener()) {
+            safeLog('Failed to setup message listener');
+            return false;
+        }
+
+        safeLog('Service Worker Initialization Complete');
+        return true;
+    }
+
+    // Attempt initialization
+    try {
+        initializeServiceWorker();
+    } catch (error) {
+        safeLog('Unexpected initialization error:', error);
+    }
 
     console.log('SMARTTAB: Background Script Setup Complete');
 })();

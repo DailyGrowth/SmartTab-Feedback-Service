@@ -1,36 +1,54 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('SMARTTAB: Popup DOM loaded');
 
+    // Logging function with error tracking
+    function safeLog(message, ...args) {
+        try {
+            console.log(`SMARTTAB: ${message}`, ...args);
+        } catch (error) {
+            // Fallback logging
+            console.error('SMARTTAB: Logging failed', error);
+        }
+    }
+
     // Comprehensive runtime and extension connectivity check
     function checkExtensionRuntime() {
         return new Promise((resolve, reject) => {
-            console.log('SMARTTAB: Performing comprehensive runtime check');
+            safeLog('Performing comprehensive runtime check');
             
             // Check basic runtime availability
             if (!chrome || !chrome.runtime) {
-                console.error('SMARTTAB: Chrome runtime is not available');
+                safeLog('Chrome runtime is not available');
                 reject(new Error('Chrome runtime is not available'));
                 return;
             }
 
             // Check extension ID
             const extensionId = chrome.runtime.id;
-            console.log('SMARTTAB: Extension ID:', extensionId);
+            safeLog('Extension ID:', extensionId);
 
             // Attempt to ping background script
+            const pingTimeout = setTimeout(() => {
+                safeLog('Ping timeout');
+                reject(new Error('Background script ping timeout'));
+            }, 5000);
+
             try {
                 chrome.runtime.sendMessage({ action: 'ping' }, (response) => {
+                    clearTimeout(pingTimeout);
+
                     if (chrome.runtime.lastError) {
-                        console.error('SMARTTAB: Runtime ping failed:', chrome.runtime.lastError);
+                        safeLog('Runtime ping failed:', chrome.runtime.lastError);
                         reject(new Error('Failed to establish connection with background script'));
                         return;
                     }
 
-                    console.log('SMARTTAB: Background script ping successful');
-                    resolve(true);
+                    safeLog('Background script ping successful', response);
+                    resolve(response);
                 });
             } catch (error) {
-                console.error('SMARTTAB: Ping attempt threw an error:', error);
+                clearTimeout(pingTimeout);
+                safeLog('Ping attempt threw an error:', error);
                 reject(error);
             }
         });
@@ -39,13 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enhanced message sending with multiple fallback mechanisms
     function sendExtensionMessage(action, data = {}) {
         return new Promise((resolve, reject) => {
-            console.log(`SMARTTAB: Attempting to send ${action} message`);
+            safeLog(`Attempting to send ${action} message`);
 
             const message = { ...data, action: action };
 
             // Fallback timeout
             const timeoutId = setTimeout(() => {
-                console.error(`SMARTTAB: Message sending timeout for ${action}`);
+                safeLog(`Message sending timeout for ${action}`);
                 reject(new Error('Message sending timed out'));
             }, 5000);
 
@@ -56,19 +74,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Check for runtime errors
                     if (chrome.runtime.lastError) {
-                        console.error('SMARTTAB: Message sending error:', chrome.runtime.lastError);
+                        safeLog('Message sending error:', chrome.runtime.lastError);
                         reject(new Error(`Message sending error: ${chrome.runtime.lastError.message}`));
                         return;
                     }
 
                     // Validate response
                     if (!response) {
-                        console.error('SMARTTAB: No response received');
+                        safeLog('No response received');
                         reject(new Error('No response from background script'));
                         return;
                     }
 
-                    console.log(`SMARTTAB: ${action} response:`, response);
+                    safeLog(`${action} response:`, response);
 
                     if (response.success) {
                         resolve(response);
@@ -79,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 // Clear timeout
                 clearTimeout(timeoutId);
-                console.error(`SMARTTAB: Exception sending ${action} message:`, error);
+                safeLog(`Exception sending ${action} message:`, error);
                 reject(error);
             }
         });
@@ -92,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const donationLink = document.getElementById('donation-link');
     const backButton = document.getElementById('backButton');
 
-    console.log('SMARTTAB: Button references:', {
+    safeLog('Button references:', {
         organizeButton: !!organizeButton,
         undoButton: !!undoButton,
         helpLink: !!helpLink,
@@ -111,20 +129,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Runtime check on popup load
     checkExtensionRuntime()
         .then(() => {
-            console.log('SMARTTAB: Extension runtime is ready');
+            safeLog('Extension runtime is ready');
             
             // Enable buttons after successful runtime check
             if (organizeButton) {
                 organizeButton.disabled = false;
                 organizeButton.addEventListener('click', async () => {
-                    console.log('SMARTTAB: Organize button clicked');
+                    safeLog('Organize button clicked');
                     try {
                         const response = await sendExtensionMessage('organizeTabs');
-                        console.log('SMARTTAB: Organize successful', response);
+                        safeLog('Organize successful', response);
                         updateTabStats();
                         alert(`Organized ${response.categorizedTabs} tabs into ${response.categories.length} categories`);
                     } catch (error) {
-                        console.error('SMARTTAB: Organize failed', error);
+                        safeLog('Organize failed', error);
                         alert(`Failed to organize tabs: ${error.message}`);
                     }
                 });
@@ -133,14 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (undoButton) {
                 undoButton.disabled = false;
                 undoButton.addEventListener('click', async () => {
-                    console.log('SMARTTAB: Deorganize button clicked');
+                    safeLog('Deorganize button clicked');
                     try {
                         const response = await sendExtensionMessage('deorganizeTabs');
-                        console.log('SMARTTAB: Deorganize successful', response);
+                        safeLog('Deorganize successful', response);
                         updateTabStats();
                         alert(`Deorganized ${response.unGroupedTabs} tabs`);
                     } catch (error) {
-                        console.error('SMARTTAB: Deorganize failed', error);
+                        safeLog('Deorganize failed', error);
                         alert(`Failed to deorganize tabs: ${error.message}`);
                     }
                 });
@@ -158,11 +176,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Debugging: Log any runtime errors
             chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-                console.log('SMARTTAB: Received runtime message:', request);
+                safeLog('Received runtime message:', request);
             });
         })
         .catch((error) => {
-            console.error('SMARTTAB: Extension runtime check failed:', error);
+            safeLog('Extension runtime check failed:', error);
             
             // Disable buttons and show error
             if (organizeButton) organizeButton.disabled = true;
