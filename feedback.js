@@ -4,7 +4,8 @@
     const FEEDBACK_KEY = 'smarttab_feedback_data';
     const FEEDBACK_PROMPT_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 days
     const INSTALLATION_TIME_KEY = 'smarttab_installation_time';
-    const API_ENDPOINT = 'https://your-app.deta.dev'; // We'll update this with real URL after deployment
+    const API_ENDPOINT = 'https://smarttab-feedback-service.onrender.com';
+    const SMARTTAB_API_SECRET = 'YOUR_API_SECRET_HERE'; // Replace with your actual API secret
 
     class FeedbackManager {
         constructor() {
@@ -40,6 +41,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SMARTTAB_API_SECRET}`
                     },
                     body: JSON.stringify({
                         extension_id: chrome.runtime.id,
@@ -49,10 +51,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to send usage stats');
+                    throw new Error('Usage stats submission failed');
                 }
+
+                return await response.json();
             } catch (error) {
-                console.error('Error sending usage stats:', error);
+                console.error('Error submitting usage stats:', error);
+                // Optionally, show user-friendly error message
             }
         }
 
@@ -130,6 +135,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SMARTTAB_API_SECRET}`
                     },
                     body: JSON.stringify({
                         extension_id: chrome.runtime.id,
@@ -142,9 +148,10 @@
                     throw new Error('Feedback submission failed');
                 }
 
-                console.log('Feedback submitted successfully');
+                return await response.json();
             } catch (error) {
                 console.error('Error submitting feedback:', error);
+                // Optionally, show user-friendly error message
             }
         }
 
