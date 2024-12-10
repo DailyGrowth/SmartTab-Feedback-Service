@@ -1,10 +1,12 @@
 // User Feedback Mechanism for SmartTab Organizer
 
 (function() {
-    // Ensure global SmartTabDebug object exists
+    // Explicitly create global SmartTabDebug object
     if (typeof window.SmartTabDebug === 'undefined') {
         window.SmartTabDebug = {};
     }
+
+    console.log('SmartTab Debug: Script initialization started');
 
     // SmartTab Feedback Service Configuration
     const SMARTTAB_API_SECRET = 'SmartTab_17aaf159c427520b689d58301e437efd64aeec53233f63de258dc92cb5d00f88_FeedbackService_20241210';
@@ -36,27 +38,33 @@
 
     class FeedbackManager {
         constructor() {
+            console.log('SmartTab Debug: FeedbackManager constructor called');
             this.initializeInstallationTime();
             this.setupDebugTools();
         }
 
         // Debug method to force feedback prompt
         setupDebugTools() {
-            // Expose global debug methods
-            window.SmartTabDebug.forceFeedbackPrompt = () => {
-                log('Forcing feedback prompt for testing', 'warn');
+            console.log('SmartTab Debug: Setting up debug tools');
+            
+            // Explicitly bind methods to ensure correct context
+            const forceFeedbackPrompt = () => {
+                console.log('SmartTab Debug: Force feedback prompt called');
                 this.promptForFeedback();
             };
 
-            window.SmartTabDebug.logStoredData = () => {
+            const logStoredData = () => {
                 chrome.storage.local.get(['feedbackLogs', 'feedbackErrors'], (result) => {
                     console.log('Stored Feedback Logs:', result.feedbackLogs);
                     console.log('Stored Feedback Errors:', result.feedbackErrors);
                 });
             };
 
-            // Log that debug tools are ready
-            log('SmartTab Debug Tools Initialized', 'info');
+            // Expose methods to global SmartTabDebug
+            window.SmartTabDebug.forceFeedbackPrompt = forceFeedbackPrompt;
+            window.SmartTabDebug.logStoredData = logStoredData;
+
+            console.log('SmartTab Debug: Debug tools exposed globally');
         }
 
         // Track installation time
@@ -124,7 +132,6 @@
             return Date.now() - installTime > FEEDBACK_PROMPT_INTERVAL;
         }
 
-        // Create feedback modal
         async promptForFeedback() {
             try {
                 log('Attempting to prompt for feedback', 'info');
@@ -259,4 +266,6 @@
 
     // Expose the feedback manager globally for additional debugging
     window.SmartTabDebug.feedbackManager = feedbackManager;
+
+    console.log('SmartTab Debug: Script initialization complete');
 })();
