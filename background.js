@@ -311,6 +311,11 @@
                 case 'deorganizeTabs':
                     chrome.tabs.query({ currentWindow: true }, (tabs) => {
                         console.log(`Deorganizing ${tabs.length} tabs`);
+                        console.log('Current tabs:', tabs.map(tab => ({
+                            id: tab.id, 
+                            url: tab.url, 
+                            groupId: tab.groupId
+                        })));
                         
                         const originalTabs = tabs.map(tab => ({
                             id: tab.id,
@@ -319,9 +324,21 @@
                             groupId: tab.groupId
                         }));
 
+                        let unGroupedCount = 0;
                         tabs.forEach(tab => {
                             if (tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
-                                chrome.tabs.ungroup(tab.id);
+                                try {
+                                    console.log(`Attempting to ungroup tab: ${tab.id}`);
+                                    chrome.tabs.ungroup(tab.id, () => {
+                                        if (chrome.runtime.lastError) {
+                                            console.error('Error ungrouping tab:', chrome.runtime.lastError);
+                                        } else {
+                                            unGroupedCount++;
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error('Exception while ungrouping:', error);
+                                }
                             }
                         });
 
@@ -337,8 +354,8 @@
                         sendResponse({
                             success: true,
                             totalTabs: tabs.length,
-                            categorizedTabs: 0,
-                            categories: []
+                            unGroupedTabs: unGroupedCount,
+                            message: `Deorganized ${unGroupedCount} tabs`
                         });
                     });
                     return true;
