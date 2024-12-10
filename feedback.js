@@ -1,6 +1,11 @@
 // User Feedback Mechanism for SmartTab Organizer
 
 (function() {
+    // Ensure global SmartTabDebug object exists
+    if (typeof window.SmartTabDebug === 'undefined') {
+        window.SmartTabDebug = {};
+    }
+
     // SmartTab Feedback Service Configuration
     const SMARTTAB_API_SECRET = 'SmartTab_17aaf159c427520b689d58301e437efd64aeec53233f63de258dc92cb5d00f88_FeedbackService_20241210';
     const API_ENDPOINT = 'https://smarttab-feedback-service.onrender.com';
@@ -37,12 +42,7 @@
 
         // Debug method to force feedback prompt
         setupDebugTools() {
-            // Create global debug object if it doesn't exist
-            if (!window.SmartTabDebug) {
-                window.SmartTabDebug = {};
-            }
-
-            // Expose debug methods
+            // Expose global debug methods
             window.SmartTabDebug.forceFeedbackPrompt = () => {
                 log('Forcing feedback prompt for testing', 'warn');
                 this.promptForFeedback();
@@ -256,4 +256,7 @@
     
     // Optional: Automatically log that the script has loaded
     log('SmartTab Feedback Script Loaded', 'info');
+
+    // Expose the feedback manager globally for additional debugging
+    window.SmartTabDebug.feedbackManager = feedbackManager;
 })();
